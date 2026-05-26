@@ -255,7 +255,7 @@
             text-transform: uppercase;
         }
     </style>
-</head>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script></head>
 <body>
 
 <header>
@@ -371,7 +371,7 @@
         });
 
         const data = await response.json();
-        document.getElementById('results-content').textContent = data.message;
+        document.getElementById('results-content').innerHTML = marked.parse(data.message);
     }
 
     function startOver() {
