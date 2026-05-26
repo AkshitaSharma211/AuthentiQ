@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuthentiQ</title>
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+        font-family: -apple-system, sans-serif;
+        background: #0a0a0a;
+        color: #fff;
+        min-height: 100vh;
+    }
+
+    header {
+        text-align: center;
+        padding: 40px 20px 20px;
+    }
+
+    .logo {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        color: #d4af37;
+    }
+
+    .tagline {
+        color: #888;
+        margin-top: 8px;
+        font-size: 16px;
+        letter-spacing: 1px;
+    }
+
+    .categories {
+        padding: 40px 20px;
+        text-align: center;
+    }
+
+    .categories h2 {
+        font-size: 18px;
+        color: #aaa;
+        margin-bottom: 30px;
+        font-weight: 400;
+    }
+
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .category-card {
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 24px 16px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.2s;
+    }
+
+    .category-card:hover {
+        border-color: #d4af37;
+        transform: translateY(-2px);
+    }
+
+    .category-card.active {
+        border-color: #d4af37;
+        background: #1f1a0a;
+    }
+
+    .icon { font-size: 32px; }
+
+    .upload-section {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .upload-section h2 {
+        color: #aaa;
+        font-weight: 400;
+        margin-bottom: 20px;
+    }
+
+    .upload-box {
+        border: 2px dashed #333;
+        border-radius: 12px;
+        padding: 40px;
+        cursor: pointer;
+        transition: border-color 0.2s;
+    }
+
+    .upload-box:hover { border-color: #d4af37; }
+
+    .upload-box input {
+        display: block;
+        margin: 0 auto 10px;
+    }
+
+    .upload-box p { color: #666; }
+
+    #preview {
+        width: 100%;
+        max-width: 300px;
+        border-radius: 12px;
+        margin: 20px auto;
+        display: block;
+    }
+
+    #analyzeBtn {
+        background: #d4af37;
+        color: #000;
+        border: none;
+        padding: 14px 40px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        letter-spacing: 1px;
+        margin-top: 10px;
+    }
+
+    #analyzeBtn:hover { background: #c49b2a; }
+
+    .results-section {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    #results {
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 24px;
+        color: #ddd;
+        line-height: 1.8;
+    }
+</style>
+</head>
+<body>
+<header>
+    <div class="logo">AuthentiQ</div>
+    <p class="tagline">Authenticate anything. Instantly.</p>
+</header>
+
+<main>
+    <section class="categories">
+        <h2>What would you like to verify?</h2>
+        <div class="category-grid">
+            <div class="category-card" onclick="selectCategory('accessories')">
+                <span class="icon">👜</span>
+                <span>Accessories</span>
+            </div>
+            <div class="category-card" onclick="selectCategory('apparel')">
+                <span class="icon">👔</span>
+                <span>Apparel</span>
+            </div>
+            <div class="category-card" onclick="selectCategory('footwear')">
+                <span class="icon">👟</span>
+                <span>Footwear</span>
+            </div>
+            <div class="category-card" onclick="selectCategory('glasses')">
+                <span class="icon">🕶️</span>
+                <span>Glasses</span>
+            </div>
+            <div class="category-card" onclick="selectCategory('watches')">
+                <span class="icon">⌚</span>
+                <span>Watches</span>
+            </div>
+            <div class="category-card" onclick="selectCategory('fragrances')">
+                <span class="icon">🌸</span>
+                <span>Fragrances</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="upload-section" id="upload-section" style="display:none">
+        <h2>Upload your image</h2>
+        <div class="upload-box" id="upload-box">
+            <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)">
+            <p>Click or drag image here</p>
+        </div>
+        <img id="preview" style="display:none" />
+        <button id="analyzeBtn" onclick="analyzeImage()" style="display:none">Analyze</button>
+    </section>
+
+    <section class="results-section" id="results-section" style="display:none">
+        <div id="results"></div>
+    </section>
+</main>
+
+<script>
+    let selectedCategory = '';
+
+    function selectCategory(category) {
+        selectedCategory = category;
+        document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.getElementById('upload-section').style.display = 'block';
+    }
+
+    function previewImage(event) {
+        const preview = document.getElementById('preview');
+        preview.src = URL.createObjectURL(event.target.files[0]);
+        preview.style.display = 'block';
+        document.getElementById('analyzeBtn').style.display = 'block';
+    }
+
+    async function analyzeImage() {
+        const formData = new FormData();
+        formData.append('image', document.getElementById('imageInput').files[0]);
+        formData.append('category', selectedCategory);
+
+        document.getElementById('results-section').style.display = 'block';
+        document.getElementById('results').innerHTML = 'Analyzing...';
+
+        const response = await fetch('/analyze', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+        document.getElementById('results').innerHTML = data.message;
+    }
+</script>
+
+</body>
+</html>
