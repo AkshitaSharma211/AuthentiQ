@@ -1,22 +1,24 @@
-from flask import Flask, render_template ,request, jsonify
+from flask import Flask, request, jsonify, render_template
 from google import genai
 from dotenv import load_dotenv
 import os
-from werkzeug.utils import secure_filename
+import base64
 
-app = Flask(__name__)
 load_dotenv()
 
+app = Flask(__name__)
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-UPLOAD_FOLDER = 'uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+SYSTEM_PROMPT = """You are a luxury goods authentication expert with 20 years of experience.
+Analyze the provided image and return exactly this structure:
 
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+1. Brand Name: [brand]
+2. Exact Product Name and Model: [specific model name]
+3. Authenticity Score (X%) with Reasoning: [score and why]
+4. Estimated Market Price if Authentic: [price in USD]
+5. Estimated Price if Counterfeit: [price in USD]
+
+Be specific and concise. No extra commentary."""
 
 @app.route('/')
 def index():
@@ -31,28 +33,26 @@ def analyze():
         return jsonify({"error": "No image provided"}), 400
 
     image_bytes = image.read()
-    prompt = f"""You are a luxury goods authentication expert. Analyze this {category} image and provide:
-1. Brand name
-2. Exact product name and model  
-3. Authenticity score (0-100%) with reasoning
-4. Estimated market price if authentic
-5. Estimated price if counterfeit
 
-Be specific and professional. Format your response clearly."""
-
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=[
-            {
-                "parts": [
-                    {"text": prompt},
-                    {"inline_data": {"mime_type": image.mimetype, "data": __import__('base64').b64encode(image_bytes).decode()}}
-                ]
-            }
-        ]
-    )
-
-    return jsonify({"message": response.text}) 
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[
+                {
+                    "parts": [
+                        {"text": f"Category: {category}\n\n{SYSTEM_PROMPT}"},
+                        {"inline_data": {
+                            "mime_type": image.mimetype,
+                            "data": base64.b64encode(image_bytes).decode()
+                        }}
+                    ]
+                }
+            ],
+            config={"temperature": 0}
+        )
+        return jsonify({"message": response.text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
